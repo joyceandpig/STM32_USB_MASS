@@ -1,0 +1,2 @@
+base on usb mass storage , HY27Uf081G2A 128MByte nandflash and WX25Q16 2MByte SPIFlash. 
+Now Add FatFs file System to this project 

@@ -1,0 +1,33 @@
+[Open Files]
+Active File Display Mode=1
+Active File Index=0
+Open File Line0=494
+Open File Pos0=0
+Open File Window Pos0=0,1,-1,-1,-1,-1,5,29,1025,659
+Open File0=C:\Users\Admin\Desktop\³ÌÐòÄ£°å\app\main.cpp
+Open File1=
+Remember Files=1
+
+[Project Information]
+	Project Start=E00703000500120014000500050000001F
+	Working Time=3605
+
+[Folders]
+	.\=1
+	.\ - Libraries - CMSIS=1
+	.\ - Libraries - CMSIS - CM3=1
+	.\ - Libraries - CMSIS - CM3 - CoreSupport=1
+	.\ - Libraries - CMSIS - CM3 - DeviceSupport=1
+	.\ - Libraries - CMSIS - CM3 - DeviceSupport - ST=1
+	.\ - Libraries - CMSIS - CM3 - DeviceSupport - ST - STM32F10x=1
+	.\ - Libraries - STM32F10x_StdPeriph_Driver=1
+	.\ - Project=1
+	.\ - Utilities=1
+	.\ - Utilities - debug=1
+	.\ - app=1
+	.\ - drivers=1
+	.\ - drivers - stm32f10x=1
+	.\ - kernel=1
+	.\ - kernel - api=1
+	.\ - kernel - api - src=1
+	.\ - kernel - ucos=1
