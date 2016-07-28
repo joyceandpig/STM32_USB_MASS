@@ -15,9 +15,13 @@
 #define W25Q64 	0XEF16
 #define W25Q128	0XEF17
 
+//#define SPIFLASH_BLOCK_SIZE   	8     	//每个BLOCK有8个扇区
 #define SPIFLASH_BLOCK_SIZE  		4096  //4K
 #define SPIFLASH_MEM_SIZE     	0x200000//最大2MB = 16Mbit
 #define SPIFLASH_SECTOR_SIZE    512
+#define SPIFLASH_SECTOR_COUNT   4096//memsize/blocksize W25Q16,共2M字节给FATFS占用
+			    
+
 
 extern u16 W25QXX_TYPE;					//定义W25QXX芯片型号		   
 

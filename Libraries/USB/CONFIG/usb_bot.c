@@ -43,7 +43,7 @@
 uint8_t Bot_State;
 
 // u8 *Bulk_Data_Buff;// π”√malloc…Í«Îƒ⁄¥Ê
-uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE * 2];  /* data buffer*/
+uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE * 2*4];  /* data buffer*/
 
 uint16_t Data_Len;
 Bulk_Only_CBW CBW;

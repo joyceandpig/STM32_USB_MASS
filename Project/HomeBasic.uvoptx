@@ -143,6 +143,11 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
+          <Key>DLGUARM</Key>
+          <Name>/</Name>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
           <Name>-U-O206 -O2062 -S0 -C0 -A0 -N00("") -D00(00000000) -L00(0) -TO18 -TC10000000 -TP21 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO31 -FD20000000 -FC2000 -FN1 -FF0STM32F10x_512.FLM -FS08000000 -FL080000 -FP0($$Device:STM32F103ZE$Flash\STM32F10x_512.FLM)</Name>
         </SetRegEntry>
@@ -186,34 +191,34 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>383</LineNumber>
+          <LineNumber>211</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134265632</Address>
+          <Address>134246700</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>C:\Users\Admin\Desktop\绋嬪簭妯℃澘\Libraries\FATFS\src\diskio.c</Filename>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\HomeBasic\../Libraries/FATFS/src/diskio.c\383</Expression>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\211</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>525</LineNumber>
+          <LineNumber>397</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134233032</Address>
+          <Address>134262690</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>C:\Users\Admin\Desktop\绋嬪簭妯℃澘\Utilities\stm32_eval\stm32_fsmc_nand_if.c</Filename>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Libraries\FATFS\src\diskio.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\HomeBasic\../Utilities/stm32_eval/stm32_fsmc_nand_if.c\525</Expression>
+          <Expression>\\HomeBasic\../Libraries/FATFS/src/diskio.c\397</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -226,6 +231,11 @@
           <count>1</count>
           <WinNumber>1</WinNumber>
           <ItemText>rv</ItemText>
+        </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>STA</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -246,9 +256,9 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>0</periodic>
-        <aLwin>1</aLwin>
+        <aLwin>0</aLwin>
         <aCover>0</aCover>
-        <aSer1>1</aSer1>
+        <aSer1>0</aSer1>
         <aSer2>0</aSer2>
         <aPa>0</aPa>
         <viewmode>1</viewmode>
@@ -275,16 +285,6 @@
       <Lin2Executable></Lin2Executable>
       <Lin2ConfigFile></Lin2ConfigFile>
       <bLin2Auto>0</bLin2Auto>
-      <SystemViewers>
-        <Entry>
-          <Name>System Viewer\GPIOF</Name>
-          <WinId>35904</WinId>
-        </Entry>
-        <Entry>
-          <Name>System Viewer\RCC</Name>
-          <WinId>35905</WinId>
-        </Entry>
-      </SystemViewers>
       <DebugDescription>
         <Enable>1</Enable>
         <EnableLog>0</EnableLog>
@@ -856,7 +856,7 @@
 
   <Group>
     <GroupName>os_api</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1224,7 +1224,7 @@
 
   <Group>
     <GroupName>USB_Core</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1304,7 +1304,7 @@
 
   <Group>
     <GroupName>USB_Config</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

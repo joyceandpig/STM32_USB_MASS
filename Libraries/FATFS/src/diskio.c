@@ -7,311 +7,288 @@
 
 #include "diskio.h"
 #include "my_platform.h"
-
-/*-----------------------------------------------------------------------*/
-/* Correspondence between physical drive number and physical drive.      */
-//#ifdef	SPI_FLASH
-//	#include "w25qxx.h" 
-//	#define FLASH_SECTOR_SIZE 	512			  
-//	//对于W25Q16
-//	//2M字节给fatfs	 			    
-//	u16	    FLASH_SECTOR_COUNT=2048*2;	//W25Q16,共2M字节给FATFS占用
-//	#define FLASH_BLOCK_SIZE   	8     	//每个BLOCK有8个扇区
-//#endif
-
+#include "w25qxx.h"
+#include "stm32_fsmc_nand.h"
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
 
-//DSTATUS disk_initialize (
-//	BYTE drv				/* Physical drive nmuber (0..) */
-//)
-//{
-////	DSTATUS stat;
-//	int result;
-//#ifdef	SPI_FLASH	
-//	u16 id;
-//#endif
-//	
-//	switch (drv) {
-//#ifdef	SPI_FLASH		
-//	case SPI_FLASH :
-//	id = W25QXX_Init();//W25QXX初始化
-//	if(id>= W25Q80 && id<=W25Q128)
-//	{
-//		static const char * Chip_Table[] =  \
-//		{
-//			"W25Q80[0xEF13]",\
-//			"W25Q16[0xEF14]",\
-//			"W25Q32[0xEF15]",\
-//			"W25Q64[0xEF16]",\
-//			"W25Q128[0xEF17]"\
-//		};
+DSTATUS disk_initialize (
+	BYTE drv				/* Physical drive nmuber (0..) */
+)
+{
+//	DSTATUS stat;
+	int result;
+#ifdef	SPI_FLASH	
+	u16 id;
+#endif
+#ifdef FSMC_NAND
+	u8 i,NandIDBuf[5];
+#endif
+	
+	switch (drv) {
+#ifdef	SPI_FLASH		
+	case SPI_FLASH :
+	id = W25QXX_Init();//W25QXX初始化
+	if(id>= W25Q80 && id<=W25Q128)
+	{
+		static const char * Chip_Table[] =  \
+		{
+			"W25Q80[0xEF13]",\
+			"W25Q16[0xEF14]",\
+			"W25Q32[0xEF15]",\
+			"W25Q64[0xEF16]",\
+			"W25Q128[0xEF17]"\
+		};
 
-//		u_printf(INFO,"%s 初始化成功！",Chip_Table[id - 0XEF13]);	
-//		
-//		if(W25QXX_TYPE != id)
-//		{
-//			u_printf(WARN,"当前芯片与默认芯片%s不匹配",Chip_Table[W25QXX_TYPE - 0XEF13]);
-//		}
-//		return 0;
-//	}
-//	else
-//	{
-//		u_printf(INFO,"SPI FLASH 初始化失败！id= %x",id);
-//		break;	
-//	}
-//#endif
-//	
-//#ifdef	FSMC_NAND	
-//	case FSMC_NAND:	
-////		FSMC_NAND_Init();
-////		FSMC_NAND_ReadID(&NAND_ID);	
-//		u_printf(INFO,"NAND Flash 初始化成功！");
-//		return 0;
-//#endif
-//	
-//	default:
-//		result = result;
-//		break;
-//	}		
-//	return STA_NOINIT;
-//}
-
-
-
-///*-----------------------------------------------------------------------*/
-///* Return Disk Status                                                    */
-
-//DSTATUS disk_status (
-//	BYTE drv		/* Physical drive nmuber (0..) */
-//)
-//{
-////	DSTATUS stat;
-////	int result;
-
-//	switch (drv) {
-//#ifdef	SPI_FLASH			
-//		case SPI_FLASH :
-
-//		return 0;
-//#endif
-//		
-//#ifdef	FSMC_NAND		
-//	case FSMC_NAND:
-//		return 0;
-//#endif
-//	default:
-//		break;
-//	
-//	}
-//	return STA_NOINIT;
-//}
+		u_printf(INFO,"%s 初始化成功！",Chip_Table[id - 0XEF13]);	
+		
+		if(W25QXX_TYPE != id)
+		{
+			u_printf(WARN,"当前芯片与默认芯片%s不匹配",Chip_Table[W25QXX_TYPE - 0XEF13]);
+		}
+		return 0;
+	}
+	else
+	{
+		u_printf(INFO,"SPI FLASH 初始化失败！id= %x",id);
+		break;	
+	}
+#endif
+	
+#ifdef	FSMC_NAND	
+	case FSMC_NAND:	
+		FlashInit();
+		FlashReadId(NandIDBuf);
+		u_printf(INFO,"NAND Flash 初始化成功,ID =");
+		u_printf(INFO," %x",NandIDBuf[0] << 24 |
+												NandIDBuf[1] << 16 |
+												NandIDBuf[2] << 8 |
+												NandIDBuf[3]);
+		return 0;
+#endif
+		
+#ifdef SDIO_SD_CARD
+	case SDIO_SD_CARD:
+		return 0;
+#endif
+	
+	default:
+		result = result;
+		break;
+	}		
+	return STA_NOINIT;
+}
 
 
 
-///*-----------------------------------------------------------------------*/
-///* Read Sector(s)                                                        */
+/*-----------------------------------------------------------------------*/
+/* Return Disk Status                                                    */
 
-//DRESULT disk_read (
-//	BYTE drv,		/* Physical drive nmuber (0..) */
-//	BYTE *buff,		/* Data buffer to store read data */
-//	DWORD sector,	/* Sector address (LBA) */
-//	BYTE count		/* Number of sectors to read (1..255) */
-//)
-//{
-////	DRESULT res;
-//	int result;
-//	
-//	if (!count){  return RES_PARERR;}	
-//	
-//	switch (drv) {
-//		
-//#ifdef	SPI_FLASH					
-//		case SPI_FLASH :
-//		for(;count>0;count--)
-//		{
-//			W25QXX_Read(buff,sector*FLASH_SECTOR_SIZE,FLASH_SECTOR_SIZE);
-//			sector++;
-//			buff+=FLASH_SECTOR_SIZE;
-//		}
-//		return RES_OK;
-//#endif
-//		
-//#ifdef	FSMC_NAND					
-//	case FSMC_NAND:
-////		result = FSMC_NAND_ReadSmallPage(buff, sector, count);                                                
-//    if(result & NAND_READY)		 
-//			return RES_OK; 
-//    else 
-//			return RES_ERROR;			
-//#endif
-//	default:
-//		result = result;
-//		break;		
-//	}
-//	return RES_PARERR;
-//}
+DSTATUS disk_status (
+	BYTE drv		/* Physical drive nmuber (0..) */
+)
+{
+	DSTATUS stat;
+	u8 result;
+
+	switch (drv) {
+#ifdef	SPI_FLASH			
+	case SPI_FLASH:
+		stat = W25QXX_ReadSR();
+//		stat ? u_printf(INFO,"\nSPIFlash Busy\n"):u_printf(INFO,"\nSPIFlash Free\n");
+		return 0;
+#endif
+		
+#ifdef	FSMC_NAND		
+	case FSMC_NAND:
+		stat = FlashReadStatus();
+//		stat ? u_printf(INFO,"\nNandFlash Busy\n"):u_printf(INFO,"\nNandFlash Free\n");
+		return 0;
+#endif
+	
+	default:
+		break;
+	}
+	return STA_NOINIT;
+}
 
 
 
-///*-----------------------------------------------------------------------*/
-///* Write Sector(s)                                                       */
+/*-----------------------------------------------------------------------*/
+/* Read Sector(s)                                                        */
 
-//#if _READONLY == 0
-//DRESULT disk_write (
-//	BYTE drv,			/* Physical drive nmuber (0..) */
-//	const BYTE *buff,	/* Data to be written */
-//	DWORD sector,		/* Sector address (LBA) */
-//	BYTE count			/* Number of sectors to write (1..255) */
-//)
-//{
-////	DRESULT res;
-//	int result;
-
-//#ifdef	FSMC_NAND	
-//	uint32_t BackupBlockAddr;
-//	uint32_t WriteBlockAddr;
-//	uint16_t IndexTmp = 0;
-//	uint16_t OffsetPage;
-//#endif
-//	
-//  if (!count){  return RES_PARERR;}	
-//	
-//	switch (drv) {
-//#ifdef	SPI_FLASH			
-//		case SPI_FLASH :
-//			for(;count>0;count--)
-//			{										    
-//				W25QXX_Write((u8*)buff,sector*FLASH_SECTOR_SIZE,FLASH_SECTOR_SIZE);
-//				sector++;
-//				buff+=FLASH_SECTOR_SIZE;
-//			}
-//			return RES_OK;
-//#endif
-//			
-//#ifdef	FSMC_NAND	
-//	case FSMC_NAND:
-//			/* NAND memory write page at block address*/
-//			WriteBlockAddr = (sector/NAND_BLOCK_SIZE);
-//			/* NAND memory backup block address*/
-//			BackupBlockAddr = (WriteBlockAddr + (NAND_MAX_ZONE/2)*NAND_ZONE_SIZE);
-//			OffsetPage = sector%NAND_BLOCK_SIZE;
-//    
-//   /* Erase the NAND backup Block */
-//      result = FSMC_NAND_EraseBlock(BackupBlockAddr*NAND_BLOCK_SIZE);
-//  
-//      /* Backup the NAND Write Block to High zone*/
-//  
-//			 for (IndexTmp = 0; IndexTmp < NAND_BLOCK_SIZE; IndexTmp++ )
-//			 {
-//				FSMC_NAND_MoveSmallPage (WriteBlockAddr*NAND_BLOCK_SIZE+IndexTmp,BackupBlockAddr*NAND_BLOCK_SIZE+IndexTmp);
-//			 }
-//			
-//			 /* Erase the NAND Write Block */
-//			 result = FSMC_NAND_EraseBlock(WriteBlockAddr*NAND_BLOCK_SIZE);
-//			
-//					/*return write the block  with modify*/
-//			 for (IndexTmp = 0; IndexTmp < NAND_BLOCK_SIZE; IndexTmp++ )
-//			 {
-//					if((IndexTmp>=OffsetPage)&&(IndexTmp < (OffsetPage+count)))
-//					{
-//						 FSMC_NAND_WriteSmallPage((uint8_t *)buff, WriteBlockAddr*NAND_BLOCK_SIZE+IndexTmp, 1);
-//						 buff = (uint8_t *)buff + NAND_PAGE_SIZE;
-//					}
-//					else
-//					{
-//						 FSMC_NAND_MoveSmallPage (BackupBlockAddr*NAND_BLOCK_SIZE+IndexTmp,WriteBlockAddr*NAND_BLOCK_SIZE+IndexTmp);
-//					}
-//			 }    
-//			 
-//				if(result == NAND_READY)
-//					return RES_OK;
-//				else
-//					return RES_ERROR;
-//#endif
-//	default:
-//		result = result;
-//		break;		
-//	}
-//	return RES_PARERR;
-//}
-//#endif /* _READONLY */
-
-
-
-///*-----------------------------------------------------------------------*/
-///* Miscellaneous Functions                                               */
-
-//DRESULT disk_ioctl (
-//	BYTE drv,		/* Physical drive nmuber (0..) */
-//	BYTE ctrl,		/* Control code */
-//	void *buff		/* Buffer to send/receive control data */
-//)
-//{
+DRESULT disk_read (
+	BYTE drv,		/* Physical drive nmuber (0..) */
+	BYTE *buff,		/* Data buffer to store read data */
+	DWORD sector,	/* Sector address (LBA) */
+	BYTE count		/* Number of sectors to read (1..255) */
+)
+{
 //	DRESULT res;
-////	int result;
-//	
-//	res = RES_OK;
-//		
-//	switch (drv) {
-//#ifdef	SPI_FLASH			
-//		case SPI_FLASH:
-//			
-//	    switch(ctrl)
-//	    {
-//		    case CTRL_SYNC:
-//						res = RES_OK; 
-//		        break;	 
-//		    case GET_SECTOR_SIZE:
-//		        *(WORD*)buff = FLASH_SECTOR_SIZE;
-//		        res = RES_OK;
-//		        break;	 
-//		    case GET_BLOCK_SIZE:
-//		        *(WORD*)buff = FLASH_BLOCK_SIZE;
-//		        res = RES_OK;
-//		        break;	 
-//		    case GET_SECTOR_COUNT:
-//		        *(DWORD*)buff = FLASH_SECTOR_COUNT;
-//		        res = RES_OK;
-//		        break;
-//		    default:
-//		        res = RES_PARERR;
-//		        break;
-//	    }
-//			return res;
-//#endif
-//			
-//#ifdef	FSMC_NAND	
-//		case FSMC_NAND:    
-//      switch(ctrl)
-//      {
-//       case CTRL_SYNC:
-//           break;
-//				case GET_BLOCK_SIZE:
-//           *(DWORD*)buff = NAND_BLOCK_SIZE;
-//           break;
-//				case GET_SECTOR_COUNT:
-//           *(DWORD*)buff = (((NAND_MAX_ZONE/2) * NAND_ZONE_SIZE) * NAND_BLOCK_SIZE);
-//           break;
-//				case GET_SECTOR_SIZE:
-//           *(WORD*)buff = NAND_PAGE_SIZE;
-//           break;
-//       default:
-//           res = RES_PARERR;
-//           break;
-//			}
-//      return res;	
-//#endif
-//			 default:
-//				 res = res;
-//				 break;
-//	}
-//	return RES_PARERR;
-//}
-//DWORD get_fattime (void)
-//{ 
-//	return 0;
-//}
+	int result;
+	u32 addr;
+	if (!count){  return RES_PARERR;}	
+	
+	switch (drv) {
+		
+#ifdef	SPI_FLASH					
+		case SPI_FLASH :
+		for(;count>0;count--)
+		{
+			W25QXX_Read(buff,sector*SPIFLASH_SECTOR_SIZE,SPIFLASH_SECTOR_SIZE);
+			sector++;
+			buff+=SPIFLASH_SECTOR_SIZE;
+		}
+		return RES_OK;
+#endif
+		
+#ifdef	FSMC_NAND					
+	case FSMC_NAND:
+		addr = sector * FLASH_SECTOR_SIZE;
+		(uint32)result =FlashReadOneSector((uint32)addr, (u8 *)buff, count-1);  
+
+    if(!result)		 
+			return RES_OK; 
+    else 
+			return RES_ERROR;			
+#endif
+	default:
+		result = result;
+		break;		
+	}
+	return RES_PARERR;
+}
+
+
+
+/*-----------------------------------------------------------------------*/
+/* Write Sector(s)                                                       */
+
+#if _READONLY == 0
+DRESULT disk_write (
+	BYTE drv,			/* Physical drive nmuber (0..) */
+	const BYTE *buff,	/* Data to be written */
+	DWORD sector,		/* Sector address (LBA) */
+	BYTE count			/* Number of sectors to write (1..255) */
+)
+{
+//	DRESULT res;
+	int result;
+
+#ifdef	FSMC_NAND	
+	uint32_t BackupBlockAddr;
+	uint32_t WriteBlockAddr;
+	uint16_t IndexTmp = 0;
+	uint16_t OffsetPage;
+	uint32 addr;
+#endif
+	
+  if (!count){  return RES_PARERR;}	
+	
+	switch (drv) {
+#ifdef	SPI_FLASH			
+		case SPI_FLASH :
+			for(;count>0;count--)
+			{										    
+				W25QXX_Write((u8*)buff,sector*SPIFLASH_SECTOR_SIZE,SPIFLASH_SECTOR_SIZE);
+				sector++;
+				buff+=SPIFLASH_SECTOR_SIZE;
+			}
+			return RES_OK;
+#endif
+			
+#ifdef	FSMC_NAND	
+	case FSMC_NAND:
+			addr = sector * FLASH_SECTOR_SIZE;
+			(uint32)result = FlashWriteOneSector((uint32)addr,(u8 *)buff, count-1);
+			if(result == 0)
+				return RES_OK;
+			else
+				return RES_ERROR;
+#endif
+	default:
+		result = result;
+		break;		
+	}
+	return RES_PARERR;
+}
+#endif /* _READONLY */
+
+
+
+/*-----------------------------------------------------------------------*/
+/* Miscellaneous Functions                                               */
+
+DRESULT disk_ioctl (
+	BYTE drv,		/* Physical drive nmuber (0..) */
+	BYTE ctrl,		/* Control code */
+	void *buff		/* Buffer to send/receive control data */
+)
+{
+	DRESULT res;
+//	int result;
+	
+	res = RES_OK;
+		
+	switch (drv) {
+#ifdef	SPI_FLASH			
+		case SPI_FLASH:
+			
+	    switch(ctrl)
+	    {
+		    case CTRL_SYNC:
+						res = RES_OK; 
+		        break;	 
+		    case GET_SECTOR_SIZE:
+		        *(WORD*)buff = SPIFLASH_SECTOR_SIZE;
+		        res = RES_OK;
+		        break;	 
+		    case GET_BLOCK_SIZE:
+		        *(WORD*)buff = SPIFLASH_BLOCK_SIZE;
+		        res = RES_OK;
+		        break;	 
+		    case GET_SECTOR_COUNT:
+		        *(DWORD*)buff = SPIFLASH_SECTOR_COUNT;
+		        res = RES_OK;
+		        break;
+		    default:
+		        res = RES_PARERR;
+		        break;
+	    }
+			return res;
+#endif
+			
+#ifdef	FSMC_NAND	
+		case FSMC_NAND:    
+      switch(ctrl)
+      {
+       case CTRL_SYNC:
+           break;
+				case GET_BLOCK_SIZE:
+           *(DWORD*)buff = FLASH_BLOCK_SIZE;
+           break;
+				case GET_SECTOR_COUNT:
+           *(DWORD*)buff = (FLASH_MAX_ADDR) / NAND_BLOCK_SIZE;
+           break;
+				case GET_SECTOR_SIZE:
+           *(WORD*)buff = FLASH_SECTOR_SIZE;
+           break;
+       default:
+           res = RES_PARERR;
+           break;
+			}
+      return res;	
+#endif
+			 default:
+				 res = res;
+				 break;
+	}
+	return RES_PARERR;
+}
+DWORD get_fattime (void)
+{ 
+	return 0;
+}
 
 
 #include "ff.h"			/* Declarations of FatFs API */
@@ -356,6 +333,8 @@ FILINFO fileinfo;	//文件信息
 DIR dir;  			//目录
 
 u8 *fatbuf = (void *)0;			//SD卡数据缓存区
+															
+															
 extern u8 Max_Lun;		
 extern vu8 USB_STATUS_REG;
 
@@ -381,6 +360,9 @@ void USB_CONNECT_INIT(void){
 		USB_Interrupts_Config();    
 		Set_USBClock();
 		USB_Init();	 
+	
+		while (bDeviceState != CONFIGURED);	  //等待USB枚举成功
+	  u_printf(DBG,"USB Enum Success");	
 }
 /*******************************************************************************
 * Function Name  : 
@@ -398,6 +380,69 @@ void MAL_Disk_Init(void){
 		//Init sd
 //		MAL_Init(MAL_SD);
 }
+void fatfstest(void)
+{
+	u8 res=0;	
+	DWORD clust;
+	unsigned int r;
+	FATFS *pfs;
+	#if 0
+		const TCHAR *Ptr = "1:/";
+		const TCHAR *fl_Path = "1:/test.dat";
+	#else
+		const TCHAR *Ptr = "2:/";
+		const TCHAR *fl_Path = "2:/NandTest.txt";
+	#endif
+
+	
+	res = f_mount(&fs,Ptr,1); 				//
+	if (res != FR_OK){
+		Fatfs_assert_param("挂载失败，尝试格式化...",res);	
+		res=f_mkfs(Ptr,1,4096);  //MUST Format for New NANDFLASH !!!
+		Fatfs_assert_param("格式化...",res);	
+	}else{
+		Fatfs_assert_param("挂载成功...",res);
+	}
+	
+	res = f_getfree(Ptr, &clust, &pfs);//??????,????0;"/"??"0:/"
+	Fatfs_assert_param("获取磁盘根目录",res);
+
+	
+ //for write
+  res=f_open(&file,fl_Path,FA_OPEN_EXISTING |FA_READ);
+	if(res == FR_OK){
+		Fatfs_assert_param("open  /FlashTest.txt 文件打开错误",res);
+		res=f_open(&file,fl_Path,FA_OPEN_ALWAYS |FA_WRITE);
+		Fatfs_assert_param("/FlashTest.txt 重新创建!",res);
+		
+		sprintf((char *)TxBuffer,"现在文件系统!");		
+		res=f_write(&file,TxBuffer,512,&r);
+		Fatfs_assert_param("write  /FlashTest.txt",res);
+		f_close(&file);	//??	
+		u_printf(INFO,"文件保存!");
+		
+		//????
+		res=f_open(&file,fl_Path,FA_OPEN_EXISTING | FA_READ );
+		Fatfs_assert_param("open  /FlashTest.txt",res);	
+		if(res != FR_OK){
+			u_printf(ERR,"文件打开错误!");
+			while(1);
+		}		
+		Sleep(200);
+	}else{
+		Fatfs_assert_param("open  /FlashTest.txt 打开成功!",res);
+	}
+	
+	// for read	
+	res=f_read(&file,RxBuffer,512,&r);
+	Fatfs_assert_param("read  /FlashTest.txt",res);
+	Sleep(200);
+	if(res || r == 0)	u_printf(TRACK);
+
+	u_printf(DBG,"[%s] Recv: \n\t%s",Ptr,RxBuffer);
+	u_printf(TRACK);       
+	f_close(&file);
+}
 /*******************************************************************************
 * Function Name  : 
 * Description         :
@@ -412,11 +457,13 @@ void TestNandFlashAsMass(void)
 		u8 USB_STA;
 		u8 Divece_STA;	
 	
+		fatfstest();
 		MAL_Disk_Init();//磁盘初始化
+//		W25QXX_Erase_Chip();
+		
 		USB_CONNECT_INIT();//usb启动连接
-	  while (bDeviceState != CONFIGURED);	  //等待USB枚举成功
-	  u_printf(DBG,"USB Enum Success");	
-	
+
+
 		while(1)
 		{
 			Sleep(1);				  
@@ -440,7 +487,6 @@ void TestNandFlashAsMass(void)
 			{
 				if(bDeviceState==CONFIGURED)u_printf(DBG,"USB Connected    ");//提示USB连接已经建立
 				Divece_STA=bDeviceState;
-//				return ;
 			}
 			tct++;
 			if(tct==200)

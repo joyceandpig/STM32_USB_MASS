@@ -52,6 +52,7 @@
 #define SD_R6_COM_CRC_FAILED            ((uint32_t)0x00008000)
 
 #define SD_VOLTAGE_WINDOW_SD            ((uint32_t)0x80100000)
+#define SD_VOLTAGE_WINDOW_MMC           ((uint32_t)0x80FF8000)
 #define SD_HIGH_CAPACITY                ((uint32_t)0x40000000)
 #define SD_STD_CAPACITY                 ((uint32_t)0x00000000)
 #define SD_CHECK_PATTERN                ((uint32_t)0x000001AA)
@@ -84,7 +85,7 @@
 #define SDIO_SEND_IF_COND               ((uint32_t)0x00000008)
 
 #define SDIO_INIT_CLK_DIV                  ((uint8_t)0xB2)
-#define SDIO_TRANSFER_CLK_DIV              ((uint8_t)0x1) 
+#define SDIO_TRANSFER_CLK_DIV              ((uint8_t)0x2) 
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -128,18 +129,21 @@ static void DMA_RxConfiguration(uint32_t *BufferDST, uint32_t BufferSize);
 SD_Error SD_Init(void)
 {
   SD_Error errorstatus = SD_OK;
-
+	NVIC_InitTypeDef NVIC_InitStructure;
   /* Configure SDIO interface GPIO */
   GPIO_Configuration();//配置SDIO接口使用的GPIO管脚
 
-  /* Enable the SDIO AHB Clock */
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_SDIO, ENABLE);//使能SDIO接口的AHB时钟
-
-  /* Enable the DMA2 Clock */
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE); //使能DMA2时钟
-
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); //设置中断分组	
+	NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;								//设置中断通道
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;	//抢先优先级  	 	 
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;				//响应优先级
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;									//使能中断
+	NVIC_Init(&NVIC_InitStructure);	//初始化中断
+	
+	
   SDIO_DeInit(); //配置SDIO接口，恢复初始设置
-
+  /* 进入卡识别模式*/
+  /* 确认卡的操作电压并完成卡的初始化*/
   errorstatus = SD_PowerON();
 	printf("\nSD type = %d\n",CardType);
 	printf("\nSD PowerON RES is %s\n",(errorstatus == SD_OK)?"ok":"fail");
@@ -148,7 +152,7 @@ SD_Error SD_Init(void)
     /* CMD Response TimeOut (wait for CMDSENT flag) */
     return(errorstatus);
   }
-
+  /* 如果卡初始化成功，则进行卡识别 */
   errorstatus = SD_InitializeCards();
 	printf("\nSD SD_InitializeCards RES is %s\n",(errorstatus == SD_OK)?"ok":"fail");
   if (errorstatus != SD_OK)
@@ -163,7 +167,7 @@ SD_Error SD_Init(void)
   SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
   SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
   SDIO_InitStructure.SDIO_ClockPowerSave = SDIO_ClockPowerSave_Disable;
-  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_1b;
+  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_4b;
   SDIO_InitStructure.SDIO_HardwareFlowControl = SDIO_HardwareFlowControl_Disable;
   SDIO_Init(&SDIO_InitStructure);
 
@@ -185,25 +189,25 @@ SD_Error SD_PowerON(void)
   bool validvoltage = FALSE;
   uint32_t SDType = SD_STD_CAPACITY;
 
-  /* Power ON Sequence -------------------------------------------------------*/
-  /* Configure the SDIO peripheral */
-  SDIO_InitStructure.SDIO_ClockDiv = SDIO_INIT_CLK_DIV; /* HCLK = 72MHz, SDIOCLK = 72MHz, SDIO_CK = HCLK/(178 + 2) = 400 KHz */
+  /* 上点顺序 -------------------------------------------------------*/
+  /* 为卡识别模式配置SDIO外设 */
+  /* HCLK = 72MHz, SDIOCLK = 72MHz, SDIO_CK = HCLK/(178 + 2) = 400 KHz */
+  /* 为卡识别模式时 SDIO_CK不能超过400KHz */
+  SDIO_InitStructure.SDIO_ClockDiv = SDIO_INIT_CLK_DIV; 
   SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
   SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
   SDIO_InitStructure.SDIO_ClockPowerSave = SDIO_ClockPowerSave_Disable;
-  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_4b;
+  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_1b;
   SDIO_InitStructure.SDIO_HardwareFlowControl = SDIO_HardwareFlowControl_Disable;
   SDIO_Init(&SDIO_InitStructure);
 
-  /* Set Power State to ON */
+  /* 打开 SDIO 电源 */
   SDIO_SetPowerState(SDIO_PowerState_ON);
 
-  /* Enable SDIO Clock */
+  /* 使能 SDIO 时钟 */
   SDIO_ClockCmd(ENABLE);
-	
-
   /* CMD0: GO_IDLE_STATE -------------------------------------------------------*/
-  /* No CMD response required */
+  /* 发送 CMD0 复位卡，该命令不需要相应 */
   SDIO_CmdInitStructure.SDIO_Argument = 0x0;
   SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_GO_IDLE_STATE;
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_No;
@@ -212,19 +216,19 @@ SD_Error SD_PowerON(void)
   SDIO_SendCommand(&SDIO_CmdInitStructure);
 
   errorstatus = CmdError();
+//		printf("\nCMD0  Res = %d\n",errorstatus);
 
   if (errorstatus != SD_OK)
   {
-    /* CMD Response TimeOut (wait for CMDSENT flag) */
+    /* 没发送CMD0，退回命令超时错误 */
     return(errorstatus);
   }
-
   /* CMD8: SEND_IF_COND --------------------------------------------------------*/
-  /* Send CMD8 to verify SD card interface operating condition */
-  /* Argument: - [31:12]: Reserved (shall be set to '0')
-               - [11:8]: Supply Voltage (VHS) 0x1 (Range: 2.7-3.6 V)
-               - [7:0]: Check Pattern (recommended 0xAA) */
-  /* CMD Response: R7 */
+  /* 发送 CMD8 核实 SD 卡接口操作条件 */
+  /* 参数: 	- [31:12]: 保留 ('0')
+            - [11:8]: 供电电压(VHS) 0x1 (范围: 2.7-3.6 V)
+            - [7:0]: 检查类型(推荐 0xAA) */
+  /* 相应类型: R7 */
   SDIO_CmdInitStructure.SDIO_Argument = SD_CHECK_PATTERN;
   SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_SEND_IF_COND;
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -233,7 +237,7 @@ SD_Error SD_PowerON(void)
   SDIO_SendCommand(&SDIO_CmdInitStructure);
 
   errorstatus = CmdResp7Error();
-
+  /* 如果已经接收到相应 R7，则符合SD卡2.0标准，并且可以设置HCS(HCS=1，表示主机支持SDHC) */
   if (errorstatus == SD_OK)
   {
     CardType = SDIO_STD_CAPACITY_SD_CARD_V2_0; /* SD Card 2.0 */
@@ -241,7 +245,11 @@ SD_Error SD_PowerON(void)
   }
   else
   {
-    /* CMD55 */
+	/* CMD55:APP_CMD */
+	/* 发送	CMD55 判断是不是SD卡 */
+	/* 参数: - [31:16]: RCA = 0x0000
+	    	 - [15:01]: 保留（‘0’）
+	   相应类型: R1 */
     SDIO_CmdInitStructure.SDIO_Argument = 0x00;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_APP_CMD;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -250,7 +258,11 @@ SD_Error SD_PowerON(void)
     SDIO_SendCommand(&SDIO_CmdInitStructure);
     errorstatus = CmdResp1Error(SDIO_APP_CMD);
   }
-  /* CMD55 */
+	/* CMD55:APP_CMD */
+	/* 发送	CMD55 判断是不是SD卡 */
+	/* 参数: - [31:16]: RCA = 0x0000
+	    	 - [15:01]: 保留（‘0’）
+	    相应类型: R1 */
   SDIO_CmdInitStructure.SDIO_Argument = 0x00;
   SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_APP_CMD;
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -259,17 +271,20 @@ SD_Error SD_PowerON(void)
   SDIO_SendCommand(&SDIO_CmdInitStructure);
   errorstatus = CmdResp1Error(SDIO_APP_CMD);
 
-  /* If errorstatus is Command TimeOut, it is a MMC card */
-  /* If errorstatus is SD_OK it is a SD card: SD card 2.0 (voltage range mismatch)
-     or SD card 1.x */
+  /* 如果errorstatus是命令响应超时，则是MMC卡 */
+  /* 如果errorstatus是SD_OK，则是SD卡：SD卡1.x（不符合SD卡2.0标准）或2.0
+  （不支持设置的电压范围（2.7~3.6V））*/
   if (errorstatus == SD_OK)
   {
-    /* SD CARD */
+    /* SD 卡*/
     /* Send ACMD41 SD_APP_OP_COND with Argument 0x80100000 */
     while ((!validvoltage) && (count < SD_MAX_VOLT_TRIAL))
     {
 
-      /* SEND CMD55 APP_CMD with RCA as 0 */
+      /* 必须在发送ACMD41之前发送CMD55通知卡，下面一条命令是应用特定命令*/
+      /* 参数: - [31:16]: RCA = 0x0000
+               - [15:0]: 保留('0') */
+      /* 响应类型: R1 */
       SDIO_CmdInitStructure.SDIO_Argument = 0x00;
       SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_APP_CMD;
       SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -283,6 +298,12 @@ SD_Error SD_PowerON(void)
       {
         return(errorstatus);
       }
+      /* ACMD41: SD_SEND_OP_COND */
+      /* 发送 ACMD41 要求卡发送操作条件寄存器(OCR) */
+      /* 参数: - [31]: 保留('0')
+                - [30]: 主机容量支持(HCS) SDType = 0x40000000
+                - [23:0]: VDD电压窗口 SD_VOLTAGE_WINDOW_SD = 0x00100000(3.2~3.3V) */
+      /* 响应类型: R3 */
       SDIO_CmdInitStructure.SDIO_Argument = SD_VOLTAGE_WINDOW_SD | SDType;
       SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_SD_APP_OP_COND;
       SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -293,26 +314,57 @@ SD_Error SD_PowerON(void)
       errorstatus = CmdResp3Error();
       if (errorstatus != SD_OK)
       {
+      /* 命令响应超时，返回命令响应超时错误 */
         return(errorstatus);
       }
-
+      /* 从SDIO_RESP1寄存器中读取响应R3(OCR)，并解析 */
       response = SDIO_GetResponse(SDIO_RESP1);
+      /* 判断busy位(OCR[31])是否为1(busy=1，表示ACMD41的初始化完成) */
       validvoltage = (bool) (((response >> 31) == 1) ? 1 : 0);
+      /* 尝试次数加1 */
       count++;
     }
+    /* 如果尝试了 SD_MAX_VOLT_TRIAL 次，初始化还没有完成，则VDD电压窗口(3.2~3.3V)是无效的 */
     if (count >= SD_MAX_VOLT_TRIAL)
     {
       errorstatus = SD_INVALID_VOLTRANGE;
       return(errorstatus);
     }
-
+    /* 判断CCS位(OCR[30])是否为1(CCS=1，表示卡是高容量SD卡) */
     if (response &= SD_HIGH_CAPACITY)
     {
       CardType = SDIO_HIGH_CAPACITY_SD_CARD;
     }
-
-  }/* else MMC Card */
-
+  
+  }/* 否则是 MMC 卡 */
+		else	//MMC card
+	{
+		CardType=SDIO_MULTIMEDIA_CARD;	  
+		//MMC卡,发送CMD0 SDIO_SEND_OP_COND,参数为:0x80FF8000 
+		while((!validvoltage)&&(count<SD_MAX_VOLT_TRIAL))
+		{	   										   				   
+			//发送CMD1,短响应
+			 
+			SDIO_CmdInitStructure.SDIO_Argument = SD_VOLTAGE_WINDOW_MMC;
+      SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_SD_APP_OP_COND;
+      SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
+      SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
+      SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
+      SDIO_SendCommand(&SDIO_CmdInitStructure);
+			errorstatus=CmdResp3Error(); 					//等待R3响应   
+ 			if(errorstatus != SD_OK)	return errorstatus;	//操作失败
+			 
+			response = SDIO->RESP1;	//得到响应值
+			validvoltage = (((response>>31)==1)?1:0);
+			count++;
+		}	//end while
+		if(count>=SD_MAX_VOLT_TRIAL)
+		{
+			errorstatus=SD_INVALID_VOLTRANGE;
+			return(errorstatus);
+		}	 
+	}	//end else
+  /* 返回SD_OK */
   return(errorstatus);
 }
 
@@ -351,11 +403,14 @@ SD_Error SD_InitializeCards(void)
     errorstatus = SD_REQUEST_NOT_APPLICABLE;
     return(errorstatus);
   }
-	
+
+/* 如果不是SDIO卡，则发送CMD2 */
   if (SDIO_SECURE_DIGITAL_IO_CARD != CardType)
   {
-		printf("\nSD_InitializeCards send cmd2\n");
-    /* Send CMD2 ALL_SEND_CID */
+    /* CMD2: ALL_SEND_CID ----------------------------------------------------------*/
+    /* 发送 CMD2 要求所有处于就绪状态下的卡发送卡识别寄存器(CID) */
+    /* 参数: - [31:0]: 填充位('0') */
+    /* 响应类型: R2 */
     SDIO_CmdInitStructure.SDIO_Argument = 0x0;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_ALL_SEND_CID;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Long;
@@ -364,12 +419,13 @@ SD_Error SD_InitializeCards(void)
     SDIO_SendCommand(&SDIO_CmdInitStructure);
 
     errorstatus = CmdResp2Error();
-		printf("\nCmdResp2Error RES is %s\n",(errorstatus == SD_OK)?"ok":"fail");
+		printf("\nres = %d\n",errorstatus);
+	/* 命令响应超时 或 CRC校验失败 */
     if (SD_OK != errorstatus)
     {
       return(errorstatus);
     }
-
+	/* 从SDIO_RESP1..4寄存器中读取响应R2(CID寄存器) */
     CID_Tab[0] = SDIO_GetResponse(SDIO_RESP1);
     CID_Tab[1] = SDIO_GetResponse(SDIO_RESP2);
     CID_Tab[2] = SDIO_GetResponse(SDIO_RESP3);
@@ -378,11 +434,10 @@ SD_Error SD_InitializeCards(void)
   if ((SDIO_STD_CAPACITY_SD_CARD_V1_1 == CardType) ||  (SDIO_STD_CAPACITY_SD_CARD_V2_0 == CardType) ||  (SDIO_SECURE_DIGITAL_IO_COMBO_CARD == CardType)
       ||  (SDIO_HIGH_CAPACITY_SD_CARD == CardType))
   {
-    /* Send CMD3 SET_REL_ADDR with argument 0 */
-    /* SD Card publishes its RCA. */
-		
-		printf("\nSD_InitializeCards send cmd3\n");
-		
+    /* CMD3: SEND_RELATIVE_ADDR -----------------------------------------------------*/
+    /* 发送 CMD3 要求卡发布一个新的相对卡地址(RCA) */
+    /* 参数: - [31:0]: 填充位('0') */
+    /* 响应类型: R6 */
     SDIO_CmdInitStructure.SDIO_Argument = 0x00;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_SET_REL_ADDR;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
@@ -392,39 +447,43 @@ SD_Error SD_InitializeCards(void)
 
     errorstatus = CmdResp6Error(SDIO_SET_REL_ADDR, &rca);
 
-		printf("\nCmdResp6Error RES is %s\n",(errorstatus == SD_OK)?"ok":"fail");
     if (SD_OK != errorstatus)
     {
+		/* 如果发生了错误，则返回错误代码 */
       return(errorstatus);
     }
   }
 
+/* 如果不是SDIO卡 */
   if (SDIO_SECURE_DIGITAL_IO_CARD != CardType)
   {
     RCA = rca;
-printf("\nSD_InitializeCards send cmd9\n");
-    /* Send CMD9 SEND_CSD with argument as card's RCA */
+    /* CMD9: SEND_CSD ---------------------------------------------------------------*/
+    /* 发送 CMD9 要求被寻址的卡发送卡特定数据寄存器(CSD) */
+    /* 参数: - [31:16]: 相对卡地址RCA
+              - [15:0]: 填充位('0') */
+    /* 响应类型: R2 */
     SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)(rca << 16);
     SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_SEND_CSD;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Long;
     SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand(&SDIO_CmdInitStructure);
-
+/* 在之前发送CMD2时，已经分析过 */
     errorstatus = CmdResp2Error();
 
     if (SD_OK != errorstatus)
     {
       return(errorstatus);
     }
-
+/* 从SDIO_RESP1..4寄存器中读取响应R2(CSD寄存器) */
     CSD_Tab[0] = SDIO_GetResponse(SDIO_RESP1);
     CSD_Tab[1] = SDIO_GetResponse(SDIO_RESP2);
     CSD_Tab[2] = SDIO_GetResponse(SDIO_RESP3);
     CSD_Tab[3] = SDIO_GetResponse(SDIO_RESP4);
   }
-
-  errorstatus = SD_OK; /* All cards get intialized */
+/* 卡识别结束，返回SD_OK */
+  errorstatus = SD_OK; 
 
   return(errorstatus);
 }
@@ -2341,9 +2400,10 @@ static SD_Error CmdResp3Error(void)
 * Input          : None
 * Output         : None
 * Return         : SD_Error: SD Card Error code.
+检查命令响应R2(CID 或 CSD寄存器)的错误条件
 *******************************************************************************/
 static SD_Error CmdResp2Error(void)
-{
+{	
   SD_Error errorstatus = SD_OK;
   uint32_t status;
 
@@ -2360,6 +2420,7 @@ static SD_Error CmdResp2Error(void)
     SDIO_ClearFlag(SDIO_FLAG_CTIMEOUT);
     return(errorstatus);
   }
+	/* 已收到命令响应R2，但是CRC校验失败 */
   else if (status & SDIO_FLAG_CCRCFAIL)
   {
     errorstatus = SD_CMD_CRC_FAIL;
@@ -2867,18 +2928,30 @@ static void GPIO_Configuration(void)
 {
   GPIO_InitTypeDef  GPIO_InitStructure;
 
-  /* GPIOC and GPIOD Periph clock enable */
+  /*  使能GPIOC 和 GPIOD 引脚 */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
 
-  /* Configure PC.08, PC.09, PC.10, PC.11, PC.12 pin: D0, D1, D2, D3, CLK pin */
+  /* 配置 PC.08, PC.09, PC.10, PC.11, PC.12 即管脚: D0, D1, D2, D3, CLK*/
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-  /* Configure PD.02 CMD line */
+  /* 配置 PD.02 CMD 引脚 */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+//  /* 配置SD卡检测引脚 SD_DETECT_PIN 为上拉输入模式 */
+//  /* 注意：根据不同的开发板，该引脚可能会有所不同，因为该引脚不是必须的，芯片上没有留出固定的引脚 */
+//  GPIO_InitStructure.GPIO_Pin = SD_DETECT_PIN;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+//  GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStructure);
+
+  /* 使能SDIO接口的AHB时钟*/
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_SDIO, ENABLE);
+
+  /* 使能DMA2时钟 */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
 }
 
 /*******************************************************************************

@@ -70,7 +70,7 @@ uint16_t MAL_Init(uint8_t lun)
 			printf("\nNandflash init ok!\n");
 			break;		  
 		case MAL_SD:
-			#if 0
+			#if 1
 				Status = SD_Init();  //SD卡接口初始化
 				Status = SD_GetCardInfo(&SDCardInfo); //获取SD卡信息
 				Status = SD_SelectDeselect((uint32_t) (SDCardInfo.RCA << 16));

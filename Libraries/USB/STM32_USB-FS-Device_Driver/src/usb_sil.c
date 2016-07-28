@@ -75,6 +75,20 @@ uint32_t USB_SIL_Write(uint8_t bEpAddr, uint8_t* pBufferPointer, uint32_t wBuffe
   SetEPTxCount((bEpAddr & 0x7F), wBufferSize);
   
   return 0;
+	
+//	if (_GetENDPOINT(bEpAddr) & EP_DTOG_RX)
+//  {
+//    /*read from ENDP2_BUF0Addr buffer*/
+//    UserToPMABufferCopy(pBufferPointer, ENDP1_RXADDR, wBufferSize);
+//  }
+//  else
+//  {
+//    /*read from ENDP2_BUF1Addr buffer*/
+//    UserToPMABufferCopy(pBufferPointer, ENDP1_TXADDR, wBufferSize);
+//  }
+//	ToggleDTOG_RX(bEpAddr);
+//	SetEPTxCount((bEpAddr & 0x7F), wBufferSize);
+//	return 0;
 }
 
 /*******************************************************************************

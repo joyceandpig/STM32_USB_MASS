@@ -45,8 +45,8 @@
 extern vu8 USB_STATUS_REG;
 
 //使用内存管理的时候
-extern u32 Data_Buffer[BULK_MAX_PACKET_SIZE*2];
-extern uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE * 2];  /* data buffer*/
+extern u32 Data_Buffer[BULK_MAX_PACKET_SIZE*2*4];
+extern uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE * 2*4];  /* data buffer*/
 //extern u8* Bulk_Data_Buff;//在usb_bot里面定义
 
 /* Exported macro ------------------------------------------------------------*/

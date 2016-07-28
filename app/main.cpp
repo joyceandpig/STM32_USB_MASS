@@ -4,6 +4,7 @@
 #include "stm32_key.h"
 #include "app.h"
 #include "stm32_fsmc_nand.h"
+#include "sdcard.h"
 
 //0x20000为板子内存总大小，更换MCU时需注意
 #define CHIP_RAM_START_Addr		0x20000000
@@ -218,7 +219,8 @@ printf("\r\n================%d\r\n\r\n",status);
 
 int main(void)
 {
-	
+//	u16 Sta = 0;
+//	SD_CardInfo SDInfo;
 #ifdef NOR_FLASH
   FSMC_NOR_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM2*/
 #endif
@@ -231,6 +233,13 @@ int main(void)
   STM_EVAL_COMInit(COM1, &USART_COM1);//初始化串口1	
 		
 	Soft_Info();//软件信息
+	
+//	Sta = SD_Init();  //SD卡接口初始化
+//	Sta = SD_GetCardInfo(&SDInfo); //获取SD卡信息
+//	Sta = SD_SelectDeselect((uint32_t) (SDInfo.RCA << 16));
+//	Sta = SD_EnableWideBusOperation(SDIO_BusWide_4b);//设置SDIO接口数据宽度
+//	Sta = SD_SetDeviceMode(SD_DMA_MODE);//设置工作模式
+	
 /* Initialize Operating System,uC/OS-II or uC/OS-III
                        ******************************************************/	
 #ifdef OS_UCOS

@@ -6,9 +6,10 @@
 #endif
 
 	
-#define NOR_FLASH
-#define EXT_SRAM
-#define NAND_FLASH
+#define 	NOR_FLASH
+#define 	EXT_SRAM
+#define 	NAND_FLASH
+#define 	SD_CARD
 
  
 /* Includes ------------------------------------------------------------------*/

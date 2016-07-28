@@ -163,6 +163,16 @@ void MASS_Reset()
   SetEPTxStatus(ENDP1, EP_TX_NAK);
   SetEPRxStatus(ENDP1, EP_RX_DIS);
 
+//  SetEPType(ENDP1, EP_BULK);
+//  SetEPDoubleBuff(ENDP1);
+//  SetEPDblBuffAddr(ENDP1, ENDP1_RXADDR, ENDP1_TXADDR);
+//  SetEPDblBuffCount(ENDP1, EP_DBUF_IN, Device_Property.MaxPacketSize);
+//  ClearDTOG_RX(ENDP1);
+//  ClearDTOG_TX(ENDP1);
+//  ToggleDTOG_RX(ENDP1);
+//  SetEPRxStatus(ENDP1, EP_TX_DIS);
+//  SetEPTxStatus(ENDP1, EP_RX_VALID);
+
   /* Initialize Endpoint 2 */
 //  SetEPType(ENDP2, EP_BULK);
 //  SetEPRxAddr(ENDP2, ENDP2_RXADDR);

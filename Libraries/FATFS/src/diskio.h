@@ -19,10 +19,14 @@ extern "C"
 #include "my_platform.h"
 
 
-#define SPI_FLASH			1		//spi flash
+#define SPI_FLASH					 1		//spi flash
 	
 #ifdef NAND_FLASH
-	#define FSMC_NAND		2		//nand flash
+	#define FSMC_NAND				 2		//nand flash
+#endif
+	
+#ifdef SD_CARD
+	#define SDIO_SD_CARD     3    //sd card
 #endif
 
 /* Status of Disk Functions */

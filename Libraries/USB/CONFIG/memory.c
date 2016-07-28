@@ -48,7 +48,7 @@ __IO uint32_t Counter = 0;
 
 uint32_t  Idx;
 //不使用malloc的时候
-u32 Data_Buffer[BULK_MAX_PACKET_SIZE*2]; //不使用malloc
+u32 Data_Buffer[BULK_MAX_PACKET_SIZE*2*4]; //不使用malloc
 
 //使用malloc的时候
 //u32 *Data_Buffer;	//外部必须用malloc申请 BULK_MAX_PACKET_SIZE*2*4 这么多字节的内存。
@@ -57,7 +57,7 @@ uint8_t TransferState = TXFR_IDLE;
 //使用malloc的时候
 //extern u8 *Bulk_Data_Buff;//在usb_bot.c里面申明了
 //不使用malloc的时候
-extern uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE * 2];  /* data buffer*/
+extern uint8_t Bulk_Data_Buff[BULK_MAX_PACKET_SIZE * 2*4];  /* data buffer*/
 
 
 ////////////////////////////自己定义的一个标记USB状态的寄存器///////////////////
@@ -175,7 +175,7 @@ void Write_Memory (uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length
 							W_Offset - Mass_Block_Size[lun],
 							Data_Buffer,
 							W_Length,  //for nand format
-							Mass_Block_Size[lun] //for spiflash
+							Mass_Block_Size[lun]//for spiflash
 						);
 			if(STA)USB_STATUS_REG|=0X04;//SD卡写错误!	 
 		}
