@@ -45,7 +45,7 @@ typedef enum
 	MAL_SD
 }MAL_TYPE;
 
-#define MAX_LUN  1		//(n+1) = 2个可移动磁盘 SPI FLASH + NANDFLASH + SD
+#define MAX_LUN  2		//(n+1) = 2个可移动磁盘 SPI FLASH + NANDFLASH + SD
 
 extern long long Mass_Memory_Size[MAX_LUN+1];
 extern u32 Mass_Block_Size[MAX_LUN+1];

@@ -1,4 +1,5 @@
 base on usb mass storage , HY27Uf081G2A 128MByte nandflash and WX25Q16 2MByte SPIFlash. 
 Now Add FatFs file System to this project 
 
-add FatFs for NandFlash , and test ok
+2.add FatFs for NandFlash , and test ok
+3.add SD Card with 1GByte storage, use usb_Bluk mount,but some Err occuls on the read and Write,it must be fix in next commit

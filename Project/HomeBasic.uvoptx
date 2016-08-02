@@ -191,7 +191,39 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>211</LineNumber>
+          <LineNumber>241</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134246552</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\241</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>277</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134246626</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\277</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>297</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>134246700</Address>
           <ByteObject>0</ByteObject>
@@ -202,23 +234,71 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\211</Expression>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\297</Expression>
         </Bp>
         <Bp>
-          <Number>1</Number>
+          <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>397</LineNumber>
+          <LineNumber>314</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134262690</Address>
+          <Address>134246734</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Libraries\FATFS\src\diskio.c</Filename>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\HomeBasic\../Libraries/FATFS/src/diskio.c\397</Expression>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\314</Expression>
+        </Bp>
+        <Bp>
+          <Number>4</Number>
+          <Type>0</Type>
+          <LineNumber>323</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134246750</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\323</Expression>
+        </Bp>
+        <Bp>
+          <Number>5</Number>
+          <Type>0</Type>
+          <LineNumber>334</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134246774</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\334</Expression>
+        </Bp>
+        <Bp>
+          <Number>6</Number>
+          <Type>0</Type>
+          <LineNumber>342</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134246630</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>G:\娣炲垢绉戞妧\椤圭洰\寮€鍙戝钩鍙版惌寤?git 绋嬪簭妯℃澘\绋嬪簭妯℃澘\Utilities\stm32_eval\sdcard.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\HomeBasic\../Utilities/stm32_eval/sdcard.c\342</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -236,6 +316,11 @@
           <count>2</count>
           <WinNumber>1</WinNumber>
           <ItemText>STA</ItemText>
+        </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cardinfo</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -328,7 +413,7 @@
 
   <Group>
     <GroupName>MDK-ARM</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

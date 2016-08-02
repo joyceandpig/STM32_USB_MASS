@@ -145,8 +145,8 @@ SD_Error SD_Init(void)
   /* 进入卡识别模式*/
   /* 确认卡的操作电压并完成卡的初始化*/
   errorstatus = SD_PowerON();
-	printf("\nSD type = %d\n",CardType);
-	printf("\nSD PowerON RES is %s\n",(errorstatus == SD_OK)?"ok":"fail");
+	printf("\nCardType = %d\n",CardType);
+	printf("\nSD PowerON %s\n",(errorstatus == SD_OK)?"ok":"fail");
   if (errorstatus != SD_OK)
   {
     /* CMD Response TimeOut (wait for CMDSENT flag) */
@@ -154,7 +154,7 @@ SD_Error SD_Init(void)
   }
   /* 如果卡初始化成功，则进行卡识别 */
   errorstatus = SD_InitializeCards();
-	printf("\nSD SD_InitializeCards RES is %s\n",(errorstatus == SD_OK)?"ok":"fail");
+	printf("\nSD SD_InitializeCards %s\n",(errorstatus == SD_OK)?"ok":"fail");
   if (errorstatus != SD_OK)
   {
     /* CMD Response TimeOut (wait for CMDSENT flag) */
@@ -167,7 +167,7 @@ SD_Error SD_Init(void)
   SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
   SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
   SDIO_InitStructure.SDIO_ClockPowerSave = SDIO_ClockPowerSave_Disable;
-  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_4b;
+  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_1b;
   SDIO_InitStructure.SDIO_HardwareFlowControl = SDIO_HardwareFlowControl_Disable;
   SDIO_Init(&SDIO_InitStructure);
 
@@ -197,7 +197,7 @@ SD_Error SD_PowerON(void)
   SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
   SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
   SDIO_InitStructure.SDIO_ClockPowerSave = SDIO_ClockPowerSave_Disable;
-  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_1b;
+  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_4b;
   SDIO_InitStructure.SDIO_HardwareFlowControl = SDIO_HardwareFlowControl_Disable;
   SDIO_Init(&SDIO_InitStructure);
 
@@ -206,8 +206,10 @@ SD_Error SD_PowerON(void)
 
   /* 使能 SDIO 时钟 */
   SDIO_ClockCmd(ENABLE);
+	
   /* CMD0: GO_IDLE_STATE -------------------------------------------------------*/
   /* 发送 CMD0 复位卡，该命令不需要相应 */
+
   SDIO_CmdInitStructure.SDIO_Argument = 0x0;
   SDIO_CmdInitStructure.SDIO_CmdIndex = SDIO_GO_IDLE_STATE;
   SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_No;
@@ -223,6 +225,7 @@ SD_Error SD_PowerON(void)
     /* 没发送CMD0，退回命令超时错误 */
     return(errorstatus);
   }
+
   /* CMD8: SEND_IF_COND --------------------------------------------------------*/
   /* 发送 CMD8 核实 SD 卡接口操作条件 */
   /* 参数: 	- [31:12]: 保留 ('0')
@@ -2930,6 +2933,13 @@ static void GPIO_Configuration(void)
 
   /*  使能GPIOC 和 GPIOD 引脚 */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
+	
+	  /* 使能SDIO接口的AHB时钟*/
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_SDIO, ENABLE);
+
+  /* 使能DMA2时钟 */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+	
 
   /* 配置 PC.08, PC.09, PC.10, PC.11, PC.12 即管脚: D0, D1, D2, D3, CLK*/
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
@@ -2940,18 +2950,6 @@ static void GPIO_Configuration(void)
   /* 配置 PD.02 CMD 引脚 */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-//  /* 配置SD卡检测引脚 SD_DETECT_PIN 为上拉输入模式 */
-//  /* 注意：根据不同的开发板，该引脚可能会有所不同，因为该引脚不是必须的，芯片上没有留出固定的引脚 */
-//  GPIO_InitStructure.GPIO_Pin = SD_DETECT_PIN;
-//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-//  GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStructure);
-
-  /* 使能SDIO接口的AHB时钟*/
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_SDIO, ENABLE);
-
-  /* 使能DMA2时钟 */
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
 }
 
 /*******************************************************************************

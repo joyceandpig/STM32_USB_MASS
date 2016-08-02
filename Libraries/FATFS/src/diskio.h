@@ -66,23 +66,23 @@ DRESULT disk_ioctl (BYTE, BYTE, void*);
 /* Command code for disk_ioctrl() */
 
 /* Generic command */
-#define CTRL_SYNC			0	/* Mandatory for write functions */
+#define CTRL_SYNC			    0	/* Mandatory for write functions */
 #define GET_SECTOR_COUNT	1	/* Mandatory for only f_mkfs() */
 #define GET_SECTOR_SIZE		2
 #define GET_BLOCK_SIZE		3	/* Mandatory for only f_mkfs() */
-#define CTRL_POWER			4
-#define CTRL_LOCK			5
-#define CTRL_EJECT			6
+#define CTRL_POWER			  4
+#define CTRL_LOCK			    5
+#define CTRL_EJECT			  6
 /* MMC/SDC command */
-#define MMC_GET_TYPE		10
-#define MMC_GET_CSD			11
-#define MMC_GET_CID			12
-#define MMC_GET_OCR			13
-#define MMC_GET_SDSTAT		14
+#define MMC_GET_TYPE		  10
+#define MMC_GET_CSD			  11
+#define MMC_GET_CID			  12
+#define MMC_GET_OCR			  13
+#define MMC_GET_SDSTAT	  14
 /* ATA/CF command */
-#define ATA_GET_REV			20
-#define ATA_GET_MODEL		21
-#define ATA_GET_SN			22
+#define ATA_GET_REV			  20
+#define ATA_GET_MODEL		  21
+#define ATA_GET_SN			  22
 
 void TestNandFlashAsMass(void);
 

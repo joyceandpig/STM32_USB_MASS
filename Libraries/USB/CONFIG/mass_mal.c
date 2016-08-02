@@ -74,7 +74,7 @@ uint16_t MAL_Init(uint8_t lun)
 				Status = SD_Init();  //SD卡接口初始化
 				Status = SD_GetCardInfo(&SDCardInfo); //获取SD卡信息
 				Status = SD_SelectDeselect((uint32_t) (SDCardInfo.RCA << 16));
-				Status = SD_EnableWideBusOperation(SDIO_BusWide_4b);//设置SDIO接口数据宽度
+				Status = SD_EnableWideBusOperation(SDIO_BusWide_1b);//设置SDIO接口数据宽度
 				Status = SD_SetDeviceMode(SD_DMA_MODE);//设置工作模式
 			#else
 				MSD_Init();
@@ -114,7 +114,10 @@ uint16_t MAL_Write(uint8_t lun, uint64_t Memory_Offset, uint32_t *Writebuff,  ui
 //		Write_LEDn_Status(LED3,0);
 			break;
 		case MAL_SD:
-		SD_WriteBlock(Memory_Offset, Writebuff, Transfer_Length);
+//			printf("\nSDWrite mem_offset = %d, len = %d\n",(int)Memory_Offset,Transfer_Length);
+
+				SD_WriteBlock(Memory_Offset, Writebuff, Transfer_Length);
+
 			break;
 		default:
 			return MAL_FAIL;
@@ -146,6 +149,7 @@ uint16_t MAL_Read(uint8_t lun, uint64_t Memory_Offset, uint32_t *Readbuff, uint3
 		  FlashReadOneSector(Memory_Offset, (u8*)Readbuff, nandlen);
 			break;		
 		case MAL_SD:
+//			printf("\nRead SD，mem = %d, len = %d\n",(int)Memory_Offset,Transfer_Length);
 			SD_ReadBlock(Memory_Offset, Readbuff, Transfer_Length);
 			break;
 		default:
@@ -191,7 +195,7 @@ uint16_t MAL_GetStatus (uint8_t lun)
 //        Mass_Block_Count[lun] = ((SDCardInfo.SD_csd.DeviceSize + 1) * (1 << DeviceSizeMul) << (NumberOfBlocks/2));
 //      }
       Mass_Block_Size[lun]  = 512;
-			Mass_Block_Count[lun] = 0xffffffff/512;
+			Mass_Block_Count[lun] = 0x40000000/512;
 //      Status = SD_SelectDeselect((uint32_t) (SDCardInfo.RCA << 16)); 
 //      Status = SD_EnableWideBusOperation(SDIO_BusWide_4b); 
 //      if ( Status != SD_OK )

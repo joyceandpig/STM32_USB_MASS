@@ -9,9 +9,10 @@
 #include "my_platform.h"
 #include "w25qxx.h"
 #include "stm32_fsmc_nand.h"
+#include "sdcard.h"
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
-
+extern SD_CardInfo SDCardInfo;
 DSTATUS disk_initialize (
 	BYTE drv				/* Physical drive nmuber (0..) */
 )
@@ -24,6 +25,7 @@ DSTATUS disk_initialize (
 #ifdef FSMC_NAND
 	u8 i,NandIDBuf[5];
 #endif
+
 	
 	switch (drv) {
 #ifdef	SPI_FLASH		
@@ -69,6 +71,11 @@ DSTATUS disk_initialize (
 		
 #ifdef SDIO_SD_CARD
 	case SDIO_SD_CARD:
+				result = SD_Init();  //SD卡接口初始化
+				result = SD_GetCardInfo(&SDCardInfo); //获取SD卡信息
+				result = SD_SelectDeselect((uint32_t) (SDCardInfo.RCA << 16));
+				result = SD_EnableWideBusOperation(SDIO_BusWide_1b);//设置SDIO接口数据宽度
+				result = SD_SetDeviceMode(SD_DMA_MODE);//设置工作模式
 		return 0;
 #endif
 	
@@ -105,6 +112,11 @@ DSTATUS disk_status (
 //		stat ? u_printf(INFO,"\nNandFlash Busy\n"):u_printf(INFO,"\nNandFlash Free\n");
 		return 0;
 #endif
+#ifdef SDIO_SD_CARD
+	case SDIO_SD_CARD:
+		stat = SD_GetTransferState();
+		return 0;
+#endif
 	
 	default:
 		break;
@@ -124,9 +136,8 @@ DRESULT disk_read (
 	BYTE count		/* Number of sectors to read (1..255) */
 )
 {
-//	DRESULT res;
+	DRESULT res;
 	int result;
-	u32 addr;
 	if (!count){  return RES_PARERR;}	
 	
 	switch (drv) {
@@ -144,13 +155,21 @@ DRESULT disk_read (
 		
 #ifdef	FSMC_NAND					
 	case FSMC_NAND:
-		addr = sector * FLASH_SECTOR_SIZE;
-		(uint32)result =FlashReadOneSector((uint32)addr, (u8 *)buff, count-1);  
+		(uint32)result =FlashReadOneSector((uint32)(sector * FLASH_SECTOR_SIZE), (u8 *)buff, count-1);  
 
     if(!result)		 
 			return RES_OK; 
     else 
 			return RES_ERROR;			
+#endif
+		
+#ifdef SDIO_SD_CARD
+	case SDIO_SD_CARD:
+		res =SD_ReadBlock(sector, (u32 *)buff, count);
+    if(!res)		 
+			return RES_OK; 
+    else 
+			return RES_ERROR;	
 #endif
 	default:
 		result = result;
@@ -172,7 +191,7 @@ DRESULT disk_write (
 	BYTE count			/* Number of sectors to write (1..255) */
 )
 {
-//	DRESULT res;
+	DRESULT res;
 	int result;
 
 #ifdef	FSMC_NAND	
@@ -180,7 +199,6 @@ DRESULT disk_write (
 	uint32_t WriteBlockAddr;
 	uint16_t IndexTmp = 0;
 	uint16_t OffsetPage;
-	uint32 addr;
 #endif
 	
   if (!count){  return RES_PARERR;}	
@@ -199,12 +217,20 @@ DRESULT disk_write (
 			
 #ifdef	FSMC_NAND	
 	case FSMC_NAND:
-			addr = sector * FLASH_SECTOR_SIZE;
-			(uint32)result = FlashWriteOneSector((uint32)addr,(u8 *)buff, count-1);
+			(uint32)result = FlashWriteOneSector((uint32)(sector * FLASH_SECTOR_SIZE),(u8 *)buff, count-1);
 			if(result == 0)
 				return RES_OK;
 			else
 				return RES_ERROR;
+#endif
+
+#ifdef SDIO_SD_CARD
+	case SDIO_SD_CARD:
+		res =SD_WriteBlock(sector, (u32 *)buff, count);
+    if(!res)		 
+			return RES_OK; 
+    else 
+			return RES_ERROR;
 #endif
 	default:
 		result = result;
@@ -278,6 +304,31 @@ DRESULT disk_ioctl (
            break;
 			}
       return res;	
+#endif
+			
+#ifdef SDIO_SD_CARD
+			switch(ctrl)
+	    {
+		    case CTRL_SYNC:
+						res = RES_OK; 
+		        break;	 
+		    case GET_SECTOR_SIZE:
+		        *(WORD*)buff = SD_SECTOR_SIZE;
+		        res = RES_OK;
+		        break;	 
+		    case GET_BLOCK_SIZE:
+		        *(WORD*)buff = SD_BLOCK_SIZE;
+		        res = RES_OK;
+		        break;	 
+		    case GET_SECTOR_COUNT:
+		        *(DWORD*)buff = SD_MEMORY_SIZE/SD_SECTOR_SIZE;
+		        res = RES_OK;
+		        break;
+		    default:
+		        res = RES_PARERR;
+		        break;
+	    }
+			return res;
 #endif
 			 default:
 				 res = res;
@@ -378,7 +429,7 @@ void MAL_Disk_Init(void){
 		//Init  nand
 		MAL_Init(MAL_NANDFLASH);
 		//Init sd
-//		MAL_Init(MAL_SD);
+		MAL_Init(MAL_SD);
 }
 void fatfstest(void)
 {
@@ -390,15 +441,15 @@ void fatfstest(void)
 		const TCHAR *Ptr = "1:/";
 		const TCHAR *fl_Path = "1:/test.dat";
 	#else
-		const TCHAR *Ptr = "2:/";
-		const TCHAR *fl_Path = "2:/NandTest.txt";
+		const TCHAR *Ptr = "3:/";
+		const TCHAR *fl_Path = "3:/NandTest.doc";
 	#endif
 
 	
 	res = f_mount(&fs,Ptr,1); 				//
 	if (res != FR_OK){
 		Fatfs_assert_param("挂载失败，尝试格式化...",res);	
-		res=f_mkfs(Ptr,1,4096);  //MUST Format for New NANDFLASH !!!
+//		res=f_mkfs(Ptr,1,4096);  //MUST Format for New NANDFLASH !!!
 		Fatfs_assert_param("格式化...",res);	
 	}else{
 		Fatfs_assert_param("挂载成功...",res);
@@ -410,7 +461,7 @@ void fatfstest(void)
 	
  //for write
   res=f_open(&file,fl_Path,FA_OPEN_EXISTING |FA_READ);
-	if(res == FR_OK){
+	if(res != FR_OK){
 		Fatfs_assert_param("open  /FlashTest.txt 文件打开错误",res);
 		res=f_open(&file,fl_Path,FA_OPEN_ALWAYS |FA_WRITE);
 		Fatfs_assert_param("/FlashTest.txt 重新创建!",res);
@@ -457,7 +508,7 @@ void TestNandFlashAsMass(void)
 		u8 USB_STA;
 		u8 Divece_STA;	
 	
-		fatfstest();
+//		fatfstest();
 		MAL_Disk_Init();//磁盘初始化
 //		W25QXX_Erase_Chip();
 		
