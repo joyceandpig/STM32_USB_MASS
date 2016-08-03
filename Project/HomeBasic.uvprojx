@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,OS_UCOS</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Utilities\debug;..\Project;..\Utilities\stm32_eval;..\drivers\stm32f10x\inc;..\kernel\ucos\include;..\kernel\api\inc;..\app;..\Libraries\FATFS\src;..\Libraries\FATFS\exfuns;..\Libraries\USB\STM32_USB-FS-Device_Driver\inc;..\Libraries\USB\CONFIG</IncludePath>
+              <IncludePath>..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Utilities\debug;..\Project;..\Utilities\stm32_eval;..\drivers\stm32f10x\inc;..\kernel\ucos\include;..\kernel\api\inc;..\app;..\Libraries\FATFS\src;..\Libraries\FATFS\exfuns;..\Libraries\USB\STM32_USB-FS-Device_Driver\inc;..\Libraries\USB\CONFIG;..\Utilities\USMART</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1094,6 +1094,26 @@
               <FileName>usb_scsi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\USB\CONFIG\usb_scsi.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>usmart</GroupName>
+          <Files>
+            <File>
+              <FileName>usmart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Utilities\USMART\usmart.c</FilePath>
+            </File>
+            <File>
+              <FileName>usmart_config.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Utilities\USMART\usmart_config.c</FilePath>
+            </File>
+            <File>
+              <FileName>usmart_str.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Utilities\USMART\usmart_str.c</FilePath>
             </File>
           </Files>
         </Group>

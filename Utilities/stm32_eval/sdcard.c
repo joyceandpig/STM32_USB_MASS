@@ -85,7 +85,7 @@
 #define SDIO_SEND_IF_COND               ((uint32_t)0x00000008)
 
 #define SDIO_INIT_CLK_DIV                  ((uint8_t)0xB2)
-#define SDIO_TRANSFER_CLK_DIV              ((uint8_t)0x2) 
+#define SDIO_TRANSFER_CLK_DIV              ((uint8_t)0x0A) //2
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -97,6 +97,7 @@ uint32_t *SrcBuffer, *DestBuffer;
 __IO SD_Error TransferError = SD_OK;
 __IO uint32_t TransferEnd = 0;
 __IO uint32_t NumberOfBytes = 0;
+SD_CardInfo SDCardInfo;
 SDIO_InitTypeDef SDIO_InitStructure;
 SDIO_CmdInitTypeDef SDIO_CmdInitStructure;
 SDIO_DataInitTypeDef SDIO_DataInitStructure;
@@ -145,31 +146,54 @@ SD_Error SD_Init(void)
   /* 进入卡识别模式*/
   /* 确认卡的操作电压并完成卡的初始化*/
   errorstatus = SD_PowerON();
-	printf("\nCardType = %d\n",CardType);
-	printf("\nSD PowerON %s\n",(errorstatus == SD_OK)?"ok":"fail");
+	printf("\nCardType = %d\r\n",CardType);
+	printf("\nSD PowerON %s\r\n",(errorstatus == SD_OK)?"ok":"fail");
   if (errorstatus != SD_OK)
   {
     /* CMD Response TimeOut (wait for CMDSENT flag) */
     return(errorstatus);
   }
-  /* 如果卡初始化成功，则进行卡识别 */
-  errorstatus = SD_InitializeCards();
-	printf("\nSD SD_InitializeCards %s\n",(errorstatus == SD_OK)?"ok":"fail");
-  if (errorstatus != SD_OK)
-  {
-    /* CMD Response TimeOut (wait for CMDSENT flag) */
-    return(errorstatus);
-  }
+	if(errorstatus==SD_OK)
+		errorstatus=SD_InitializeCards();			//初始化SD卡	
+	
+  if(errorstatus==SD_OK)
+		errorstatus=SD_GetCardInfo(&SDCardInfo);	//获取卡信息
+	
+ 	if(errorstatus==SD_OK)
+		errorstatus=SD_SelectDeselect((u32)(SDCardInfo.RCA<<16));//选中SD卡
+	
+  if(errorstatus==SD_OK)
+		errorstatus=SD_EnableWideBusOperation(SDIO_BusWide_1b);	//4位宽度,如果是MMC卡,则不能用4位模式 
+	
+  if((errorstatus==SD_OK)||(SDIO_MULTIMEDIA_CARD==CardType))
+	{  		    
+		if(SDCardInfo.CardType==SDIO_STD_CAPACITY_SD_CARD_V1_1||SDCardInfo.CardType==SDIO_STD_CAPACITY_SD_CARD_V2_0)
+		{
+			SDIO_InitStructure.SDIO_ClockDiv = SDIO_TRANSFER_CLK_DIV+6;	//V1.1/V2.0卡，设置最高72/12=6Mhz
+		}else{
+			SDIO_InitStructure.SDIO_ClockDiv = SDIO_TRANSFER_CLK_DIV;	//SDHC等其他卡，设置最高72/6=12Mhz
+		}
+		SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
+		SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
+		SDIO_InitStructure.SDIO_ClockPowerSave = SDIO_ClockPowerSave_Disable;
+		SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_1b;
+		SDIO_InitStructure.SDIO_HardwareFlowControl = SDIO_HardwareFlowControl_Disable;
+		SDIO_Init(&SDIO_InitStructure);			//设置时钟频率,SDIO时钟计算公式:SDIO_CK时钟=SDIOCLK/[clkdiv+2];其中,SDIOCLK固定为48Mhz 
+		//errorstatus=SD_SetDeviceMode(SD_DMA_MODE);	//设置为DMA模式
+		errorstatus=SD_SetDeviceMode(SD_POLLING_MODE);	//设置为查询模式
+ 	}
 
-  /* Configure the SDIO peripheral */
-  /* HCLK = 72 MHz, SDIOCLK = 72 MHz, SDIO_CK = HCLK/(2 + 1) = 24 MHz */  
-  SDIO_InitStructure.SDIO_ClockDiv = SDIO_TRANSFER_CLK_DIV; 
-  SDIO_InitStructure.SDIO_ClockEdge = SDIO_ClockEdge_Rising;
-  SDIO_InitStructure.SDIO_ClockBypass = SDIO_ClockBypass_Disable;
-  SDIO_InitStructure.SDIO_ClockPowerSave = SDIO_ClockPowerSave_Disable;
-  SDIO_InitStructure.SDIO_BusWide = SDIO_BusWide_1b;
-  SDIO_InitStructure.SDIO_HardwareFlowControl = SDIO_HardwareFlowControl_Disable;
-  SDIO_Init(&SDIO_InitStructure);
+	switch(SDCardInfo.CardType)
+	{
+		case SDIO_STD_CAPACITY_SD_CARD_V1_1:printf("\r\nCard Type:SDSC V1.1\r\n");break;
+		case SDIO_STD_CAPACITY_SD_CARD_V2_0:printf("\r\nCard Type:SDSC V2.0\r\n");break;
+		case SDIO_HIGH_CAPACITY_SD_CARD:printf("\r\nCard Type:SDHC V2.0\r\n");break;
+		case SDIO_MULTIMEDIA_CARD:printf("\r\nCard Type:MMC Card\r\n");break;
+	}	
+	printf("Card ManufacturerID:%d\r\n",SDCardInfo.SD_cid.ManufacturerID);	//制造商ID
+	printf("Card RCA:%d\r\n",SDCardInfo.RCA);								//卡相对地址
+	printf("Card Capacity:%d MB\r\n",(u32)(SDCardInfo.CardCapacity>>20));	//显示容量
+	printf("Card BlockSize:%d\r\n\r\n",SDCardInfo.CardBlockSize);			//显示块大小
 
   return(errorstatus);
 }
@@ -422,7 +446,7 @@ SD_Error SD_InitializeCards(void)
     SDIO_SendCommand(&SDIO_CmdInitStructure);
 
     errorstatus = CmdResp2Error();
-		printf("\nres = %d\n",errorstatus);
+		printf("\nres = %d\r\n",errorstatus);
 	/* 命令响应超时 或 CRC校验失败 */
     if (SD_OK != errorstatus)
     {

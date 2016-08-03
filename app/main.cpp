@@ -11,7 +11,9 @@
 #define CHIP_RAM_SIZE					0xC000
 
 #include "diskio.h"
-//#include "ff.h"
+#include "ff.h"
+
+#include "usmart.h"
 
 extern char Image$$RW_IRAM1$$ZI$$Limit[];
 
@@ -231,14 +233,10 @@ int main(void)
 	
 	
   STM_EVAL_COMInit(COM1, &USART_COM1);//初始化串口1	
-		
+	usmart_dev.init(72);	//初始化USMART	
+	
 	Soft_Info();//软件信息
 	
-//	Sta = SD_Init();  //SD卡接口初始化
-//	Sta = SD_GetCardInfo(&SDInfo); //获取SD卡信息
-//	Sta = SD_SelectDeselect((uint32_t) (SDInfo.RCA << 16));
-//	Sta = SD_EnableWideBusOperation(SDIO_BusWide_4b);//设置SDIO接口数据宽度
-//	Sta = SD_SetDeviceMode(SD_DMA_MODE);//设置工作模式
 	
 /* Initialize Operating System,uC/OS-II or uC/OS-III
                        ******************************************************/	
