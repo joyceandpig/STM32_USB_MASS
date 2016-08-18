@@ -84,7 +84,7 @@ DRESULT disk_ioctl (BYTE, BYTE, void*);
 #define ATA_GET_MODEL		  21
 #define ATA_GET_SN			  22
 
-void TestNandFlashAsMass(void);
+void TestEEPROM_WR(void);
 
 #define _DISKIO
 

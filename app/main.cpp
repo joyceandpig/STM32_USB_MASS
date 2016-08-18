@@ -6,6 +6,7 @@
 #include "stm32_fsmc_nand.h"
 #include "sdcard.h"
 
+
 //0x20000为板子内存总大小，更换MCU时需注意
 #define CHIP_RAM_START_Addr		0x20000000
 #define CHIP_RAM_SIZE					0xC000
@@ -38,7 +39,9 @@ void main_thread(void *pdata)
 {
 	u16 ret;
 	char buf[512];
-
+	
+	OS_CPU_SR  cpu_sr;
+	
 	RCC_ClocksTypeDef RCC_Clock;
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 	RCC_GetClocksFreq(&RCC_Clock);//获取系统总线时钟
@@ -58,7 +61,6 @@ void main_thread(void *pdata)
 
   /* Initialize LEDs, Key Button, LCD and COM port(USART)
                        ******************************************************/	
-//  STM_EVAL_COMInit(COM2, &USART_COM2);//初始化串口2	
 	STM_EVAL_LED_Init();			//LED初始化
 	STM_EVAL_BUZZERInit();		//蜂鸣器初始化
 
@@ -70,7 +72,9 @@ void main_thread(void *pdata)
 	init_work_thread();			//初始化工作线程
 	u_printf(INFO,"System successfully launched.\nThe startup time of %d.%d seconds.", os_time_get() / 1000, os_time_get() % 1000);
 
-	TestNandFlashAsMass();
+
+	TestEEPROM_WR();
+	
   printf("\nmain thred\n");			
 	while (1)
 	{					
@@ -224,15 +228,15 @@ int main(void)
 //	u16 Sta = 0;
 //	SD_CardInfo SDInfo;
 #ifdef NOR_FLASH
-  FSMC_NOR_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM2*/
+//  FSMC_NOR_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM2*/
 #endif
 	
 #ifdef EXT_SRAM  
-  FSMC_SRAM_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM3*/
+//  FSMC_SRAM_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM3*/
 #endif
 	
-	
-  STM_EVAL_COMInit(COM1, &USART_COM1);//初始化串口1	
+	//初始化串口1	
+  STM_EVAL_COMInit(COM1, &USART_COM1);
 	usmart_dev.init(72);	//初始化USMART	
 	
 	Soft_Info();//软件信息
