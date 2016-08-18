@@ -40,7 +40,7 @@ uint32_t get_random(void)
 
 void soft_reset(void)
 {
-	u_printf(INFO,"system well reset \r\n");
+	u_printf(INFO,"system will reset \r\n");
 	NVIC_SystemReset();
   	__DSB();  
 	while (1);
@@ -55,7 +55,7 @@ void HardFault_Handler()
 
 
 	u_printf(ERR_FUN,"");
-	Telnet_Control("System well reset....%d",i);
+	Telnet_Control("System will reset....%d",i);
 	while (1)
 	{
 		Sleep(1000);	

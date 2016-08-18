@@ -6,7 +6,8 @@
 #include "stm32_fsmc_nand.h"
 #include "sdcard.h"
 
-
+#define BUFFER_SIZE        0x400              /*定义读写BUFFER大小*/
+#define WRITE_READ_ADDR    0x8000             /*定义SRAM读写的地址*/
 //0x20000为板子内存总大小，更换MCU时需注意
 #define CHIP_RAM_START_Addr		0x20000000
 #define CHIP_RAM_SIZE					0xC000
@@ -17,7 +18,7 @@
 #include "usmart.h"
 
 extern char Image$$RW_IRAM1$$ZI$$Limit[];
-
+void Fill_Buffer(u16 *pBuffer, u16 BufferLenght, u32 Offset);
 void _mem_init(void)
 {
 	uint32_t malloc_start, malloc_size;
@@ -40,7 +41,10 @@ void main_thread(void *pdata)
 	u16 ret;
 	char buf[512];
 	
-	OS_CPU_SR  cpu_sr;
+	static u16 TxBuffer[BUFFER_SIZE] = {0};
+	static u16 RxBuffer[BUFFER_SIZE] = {0};
+	u32 WriteReadStatus = 0, Index = 0;
+	
 	
 	RCC_ClocksTypeDef RCC_Clock;
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
@@ -72,8 +76,46 @@ void main_thread(void *pdata)
 	init_work_thread();			//初始化工作线程
 	u_printf(INFO,"System successfully launched.\nThe startup time of %d.%d seconds.", os_time_get() / 1000, os_time_get() % 1000);
 
+	/*将写SRAM的数据BUFFER填充为从0x1234开始的连续递增的一串数据 */
+	OSIntEnter(); 
+  Fill_Buffer(TxBuffer, BUFFER_SIZE, 0x1234);
 
-	TestEEPROM_WR();
+  /*将数据写入到SRAM中。WRITE_READ_ADDR:写入的起始地址*/
+  FSMC_SRAM_WriteBuffer(TxBuffer, WRITE_READ_ADDR, BUFFER_SIZE); 
+
+  /*从SRAM中读回刚写入的数据。WRITE_READ_ADDR:读出数据的起始地址*/
+  FSMC_SRAM_ReadBuffer(RxBuffer, WRITE_READ_ADDR, BUFFER_SIZE); 
+//		for(ret=0;ret<BUFFER_SIZE;ret++)
+//	{	
+
+//        printf("0x%X\t", RxBuffer[ret]);
+//        if(ret%16 == 15)
+//        {
+//            printf("\n\r");
+//        }
+//	}
+	OSIntExit();
+
+
+	
+	
+  /*判断读回的数据与写入的数据是否一致*/   
+  for (Index = 0x00; ((Index < BUFFER_SIZE) && (WriteReadStatus == 0)); Index++)
+  {
+  	  if (RxBuffer[Index] != TxBuffer[Index])
+      {
+          WriteReadStatus = Index + 1;
+      }
+  }	
+  printf("\n\r SRAM result-%d: ",WriteReadStatus);
+  if (WriteReadStatus == 0)
+  {	
+   	  printf("\n\r SRAM ok");
+  }
+  else
+  {    
+   	  printf("\n\r SRAM fail");
+  }
 	
   printf("\nmain thred\n");			
 	while (1)
@@ -132,14 +174,14 @@ void main_thread(void *pdata)
   * @param  BufferSize: size of the buffer to fill
   * @param  Offset: first value to fill on the Buffer
   */
-void Fill_Buffer(uint8_t *pBuffer, uint16_t BufferLenght, uint32_t Offset)
+void Fill_Buffer(u16 *pBuffer, u16 BufferLenght, u32 Offset)
 {
-  uint16_t IndexTmp = 0;
+  u16 IndexTmp = 0;
 
   /* Put in global buffer same values */
   for (IndexTmp = 0; IndexTmp < BufferLenght; IndexTmp++ )
   {
-    pBuffer[IndexTmp] = IndexTmp+ Offset;
+    pBuffer[IndexTmp] = IndexTmp + Offset;
   }
 }
 
@@ -174,11 +216,11 @@ void Soft_Info(void)
 
 #ifdef NOR_FLASH
   /*读取Nor Flash ID并打印*/
-  FSMC_NOR_ReadID(&NOR_ID);
-	
-  MyPrintf("* Ext. NOR Flash：%dK Byte！ ",(1<<(FSMC_NOR_Read_Device_Size()-10)));/*打印NOR Flash大小*/
+//  FSMC_NOR_ReadID(&NOR_ID);
+//	
+//  MyPrintf("* Ext. NOR Flash：%dK Byte！ ",(1<<(FSMC_NOR_Read_Device_Size()-10)));/*打印NOR Flash大小*/
 
-	MyPrintf("\tID[%04X-%4X]	\r\n\r\n",NOR_ID.Manufacturer_Code,NOR_ID.Device_Code1);
+//	MyPrintf("\tID[%04X-%4X]	\r\n\r\n",NOR_ID.Manufacturer_Code,NOR_ID.Device_Code1);
 #endif
 
 #if 0//def NAND_FLASH	
@@ -225,14 +267,13 @@ printf("\r\n================%d\r\n\r\n",status);
 
 int main(void)
 {
-//	u16 Sta = 0;
-//	SD_CardInfo SDInfo;
+
 #ifdef NOR_FLASH
 //  FSMC_NOR_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM2*/
 #endif
-	
+
 #ifdef EXT_SRAM  
-//  FSMC_SRAM_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM3*/
+  FSMC_SRAM_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM3*/
 #endif
 	
 	//初始化串口1	

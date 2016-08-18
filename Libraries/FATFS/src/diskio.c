@@ -340,21 +340,4 @@ DWORD get_fattime (void)
 { 
 	return 0;
 }
-#include "stm32f10x.h"
-#include "stm32_eval.h"
-#include "I2C.h"
-#include <stdio.h>
 
-/*******************************************************************************
-* Function Name : 
-* Description   :
-* Input         : 
-* Return        : 
-* Author        :
-* Modify Time   :
-*******************************************************************************/                                      												
-void TestEEPROM_WR(void)
-{
-	I2C_Configuration();
-	I2C_Test();
-}	

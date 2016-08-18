@@ -37,16 +37,18 @@
 *******************************************************************************/
 void FSMC_SRAM_Init(void)
 {
-		FSMC_NORSRAMInitTypeDef  FSMC_NORSRAMInitStructure;
-  	FSMC_NORSRAMTimingInitTypeDef  p;
+		FSMC_NORSRAMInitTypeDef  FSMC_NORSRAMInitStructure;  	
+		FSMC_NORSRAMTimingInitTypeDef  p;
   	GPIO_InitTypeDef GPIO_InitStructure; 
   
-		/*使能FSMC时钟 */
-		RCC_AHBPeriphClockCmd(RCC_AHBPeriph_FSMC, ENABLE); //使能FSMC时钟
-  
+			/*使能FSMC时钟 */
+		RCC_AHBPeriphClockCmd(RCC_AHBPeriph_FSMC, ENABLE);
+	
 		/*FSMC总线使用的GPIO组时钟使能*/
-  	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOG | RCC_APB2Periph_GPIOE |
-                           RCC_APB2Periph_GPIOF, ENABLE);
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOE | 
+													 RCC_APB2Periph_GPIOF | RCC_APB2Periph_GPIOG, ENABLE);
+
+
 
     /*FSMC数据线FSMC_D[0:15]初始化，推挽复用输出*/
   	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_8 | GPIO_Pin_9 |
@@ -101,7 +103,7 @@ void FSMC_SRAM_Init(void)
   	FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth = FSMC_MemoryDataWidth_16b;  //存储器数据宽度为16位
   	FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode = FSMC_BurstAccessMode_Disable; //关闭突发模式访问
     //等待信号优先级，只有在使能突发访问模式才有效
-	FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity = FSMC_WaitSignalPolarity_Low; 
+		FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity = FSMC_WaitSignalPolarity_Low; 
     //关闭Wrapped burst access mode，只有在使能突发访问模式才有效
   	FSMC_NORSRAMInitStructure.FSMC_WrapMode = FSMC_WrapMode_Disable;         
     //等待信号设置，只有在使能突发访问模式才有效

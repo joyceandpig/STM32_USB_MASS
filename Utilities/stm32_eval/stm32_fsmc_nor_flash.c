@@ -125,7 +125,7 @@ void FSMC_NOR_Init(void)
 
   FSMC_NORSRAMInit(&FSMC_NORSRAMInitStructure);
 
-  /*--------------使能BANK1的子板块2------------------------------*/
+//  /*--------------使能BANK1的子板块2------------------------------*/
   FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM2, ENABLE);
 }
 
