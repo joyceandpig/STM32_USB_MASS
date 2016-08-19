@@ -1,8 +1,2 @@
-base on usb mass storage , HY27Uf081G2A 128MByte nandflash and WX25Q16 2MByte SPIFlash. 
-Now Add FatFs file System to this project 
+Base on stm32 usb_mass project, add norflash test in the init Project.
 
-2.add FatFs for NandFlash , and test ok
-3.add SD Card with 1GByte storage, use usb_Bluk mount,but some Err occuls on the read and Write,it must be fix in next commit
-4.增加USMART调试组件，使用串口工具对函数进行调用，从而不必每次都重新下载
-5.添加EEPROM操作代码，其中要注意，在使用EEPROM时要关闭FSMC的配置才能正常使用，
-6.添加SRAM操作，其中注意要main.cpp中，softinfo打印时要注释Norflash的部分，不然会造成hardfault。

@@ -4,6 +4,7 @@
 #include "stm32_key.h"
 #include "app.h"
 #include "stm32_fsmc_nand.h"
+#include "stm32_fsmc_nor_flash.h"
 #include "sdcard.h"
 
 #define BUFFER_SIZE        0x400              /*定义读写BUFFER大小*/
@@ -40,6 +41,7 @@ void main_thread(void *pdata)
 {
 	u16 ret;
 	char buf[512];
+	NOR_IDTypeDef NOR_ID;
 	
 	static u16 TxBuffer[BUFFER_SIZE] = {0};
 	static u16 RxBuffer[BUFFER_SIZE] = {0};
@@ -76,24 +78,43 @@ void main_thread(void *pdata)
 	init_work_thread();			//初始化工作线程
 	u_printf(INFO,"System successfully launched.\nThe startup time of %d.%d seconds.", os_time_get() / 1000, os_time_get() % 1000);
 
-	/*将写SRAM的数据BUFFER填充为从0x1234开始的连续递增的一串数据 */
+	
 	OSIntEnter(); 
+  /*读取Nor Flash ID并打印*/
+  FSMC_NOR_ReadID(&NOR_ID);
+  printf("\n\r Nor Flash ID:0x%x 0x%x",NOR_ID.Manufacturer_Code,NOR_ID.Device_Code1);
+  /*返回写模式*/
+  FSMC_NOR_ReturnToReadMode();
+  /*擦除NOR FLASH中，将要写入数据的块*/
+  FSMC_NOR_EraseBlock(WRITE_READ_ADDR);
+
+  /*将写Nor Flash的数据BUFFER填充为从0x1234开始的连续递增的一串数据 */
   Fill_Buffer(TxBuffer, BUFFER_SIZE, 0x1234);
+  /*将数据写入到Nor Flash中。WRITE_READ_ADDR:写入的起始地址*/
+  FSMC_NOR_WriteBuffer(TxBuffer, WRITE_READ_ADDR, BUFFER_SIZE);
 
-  /*将数据写入到SRAM中。WRITE_READ_ADDR:写入的起始地址*/
-  FSMC_SRAM_WriteBuffer(TxBuffer, WRITE_READ_ADDR, BUFFER_SIZE); 
+  /*从NOR FLASH中读回刚写入的数据。WRITE_READ_ADDR:读出数据的起始地址*/
+  FSMC_NOR_ReadBuffer(RxBuffer, WRITE_READ_ADDR, BUFFER_SIZE);  
 
-  /*从SRAM中读回刚写入的数据。WRITE_READ_ADDR:读出数据的起始地址*/
-  FSMC_SRAM_ReadBuffer(RxBuffer, WRITE_READ_ADDR, BUFFER_SIZE); 
-//		for(ret=0;ret<BUFFER_SIZE;ret++)
-//	{	
-
-//        printf("0x%X\t", RxBuffer[ret]);
-//        if(ret%16 == 15)
-//        {
-//            printf("\n\r");
-//        }
-//	}
+  /*判断读回的数据与写入的数据是否一致*/   
+  for (Index = 0x00; (Index < BUFFER_SIZE) && (WriteReadStatus == 0); Index++)
+  {
+    if (RxBuffer[Index] != TxBuffer[Index])
+    {
+      WriteReadStatus = Index + 1;
+    }
+  }	
+  printf("\n\r Nor Flash result: ");
+  if (WriteReadStatus == 0)
+  {	
+   	printf(" Nor Flash ok");
+	GPIO_ResetBits(GPIO_LED,DS2_PIN);
+  }
+  else
+  { 
+   	printf(" Nor Flash fail");
+	GPIO_ResetBits(GPIO_LED, DS3_PIN);     
+  }
 	OSIntExit();
 
 
@@ -216,11 +237,11 @@ void Soft_Info(void)
 
 #ifdef NOR_FLASH
   /*读取Nor Flash ID并打印*/
-//  FSMC_NOR_ReadID(&NOR_ID);
-//	
-//  MyPrintf("* Ext. NOR Flash：%dK Byte！ ",(1<<(FSMC_NOR_Read_Device_Size()-10)));/*打印NOR Flash大小*/
+  FSMC_NOR_ReadID(&NOR_ID);
+	
+  MyPrintf("* Ext. NOR Flash：%dK Byte！ ",(1<<(FSMC_NOR_Read_Device_Size()-10)));/*打印NOR Flash大小*/
 
-//	MyPrintf("\tID[%04X-%4X]	\r\n\r\n",NOR_ID.Manufacturer_Code,NOR_ID.Device_Code1);
+	MyPrintf("\tID[%04X-%4X]	\r\n\r\n",NOR_ID.Manufacturer_Code,NOR_ID.Device_Code1);
 #endif
 
 #if 0//def NAND_FLASH	
@@ -269,7 +290,7 @@ int main(void)
 {
 
 #ifdef NOR_FLASH
-//  FSMC_NOR_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM2*/
+  FSMC_NOR_Init();/*配置与SRAM连接的FSMC BANK1 NOR/SRAM2*/
 #endif
 
 #ifdef EXT_SRAM  
