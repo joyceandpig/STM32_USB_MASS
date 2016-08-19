@@ -108,37 +108,14 @@ void main_thread(void *pdata)
   if (WriteReadStatus == 0)
   {	
    	printf(" Nor Flash ok");
-	GPIO_ResetBits(GPIO_LED,DS2_PIN);
   }
   else
   { 
-   	printf(" Nor Flash fail");
-	GPIO_ResetBits(GPIO_LED, DS3_PIN);     
+   	printf(" Nor Flash fail");    
   }
 	OSIntExit();
 
-
-	
-	
-  /*判断读回的数据与写入的数据是否一致*/   
-  for (Index = 0x00; ((Index < BUFFER_SIZE) && (WriteReadStatus == 0)); Index++)
-  {
-  	  if (RxBuffer[Index] != TxBuffer[Index])
-      {
-          WriteReadStatus = Index + 1;
-      }
-  }	
-  printf("\n\r SRAM result-%d: ",WriteReadStatus);
-  if (WriteReadStatus == 0)
-  {	
-   	  printf("\n\r SRAM ok");
-  }
-  else
-  {    
-   	  printf("\n\r SRAM fail");
-  }
-	
-  printf("\nmain thred\n");			
+  printf("\nmain thred\r\n");			
 	while (1)
 	{					
 		uint16 i,j;
