@@ -1,2 +1,2 @@
-Base on stm32 usb_mass project, add norflash test in the init Project.
-1.添加norflash操作代码，并操作成功。
+Base on stm32 usb_mass project, want to add ENC28J60 project to debug internet function
+1. origin project :there is nothing about ENC28J60.
