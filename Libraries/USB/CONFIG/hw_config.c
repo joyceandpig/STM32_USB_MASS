@@ -92,11 +92,20 @@ void USB_Cable_Config (FunctionalState NewState)
 //       1,允许连接	   
 void USB_Port_Set(u8 enable)
 {
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);    //使能PORTA时钟		 
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOG,ENABLE);    //使能PORTA时钟		
+
+	  
 	if(enable)_SetCNTR(_GetCNTR()&(~(1<<1)));//退出断电模式
 	else
 	{	
-		GPIO_InitTypeDef  GPIO_InitStructure;	  
+		GPIO_InitTypeDef  GPIO_InitStructure;	
+		
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;				//端口配置
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 			//推挽输出
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;			//IO口速度为50MHz
+		GPIO_Init(GPIOG, &GPIO_InitStructure);//根据设定参数初始化	
+		GPIO_SetBits(GPIOG,GPIO_Pin_11);
+		
 		
 		_SetCNTR(_GetCNTR()|(1<<1));  // 断电模式
 	

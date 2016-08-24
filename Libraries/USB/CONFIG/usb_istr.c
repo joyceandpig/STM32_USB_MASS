@@ -81,10 +81,15 @@ void USB_Istr(void)
   wIstr = _GetISTR();
 
 #if (IMR_MSK & ISTR_CTR)
+//	printf("the res1:%4x\r\n",wIstr);
+//	printf("the res2:%4x\r\n",ISTR_CTR);
+//	printf("the res3:%4x\r\n",wInterrupt_Mask);
+//	printf("the res:%4x\r\n",wIstr & ISTR_CTR & wInterrupt_Mask);
   if (wIstr & ISTR_CTR & wInterrupt_Mask)
   {
     /* servicing of the endpoint correct transfer interrupt */
     /* clear of the CTR flag into the sub */
+//		printf("enter CTR_LP\r\n");
     CTR_LP();
 #ifdef CTR_CALLBACK
     CTR_Callback();
